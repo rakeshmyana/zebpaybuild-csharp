@@ -1,5 +1,5 @@
 # api-clients
-Zebpay rest client and Zebpay Model will also be available as nuget (As of now its private nuget). http://zebnugetserver-dev.azurewebsites.net/nuget
+Zebpay rest client and Zebpay Model will also be available as nuget.
 
 <h1>How to Install</h1>
 
@@ -7,28 +7,37 @@ Zebpay rest client and Zebpay Model will also be available as nuget (As of now i
 
 <h1>How to Use</h1>
 
-- <i>Generate your key at https://dev.zebpay.co/applications (Web or Console/backed) to generate clientid, clientsecret, scope, and apiSecret.</i>
-- <i>Subscribe to our API product for Professional at https://dev.zebpay.co/products to generate Zebpay Subscription Key.</i>
+- <i>Generate your key at https://build.zebpay.co/application (Web or Console/backed) to generate clientid, clientsecret, scope, and apiSecret and zebpaysubscriptionkey.</i>
 
 <h2>1. Configure all values as app setting</h2>
 
 ````
-{
-  "ZebpaySettings": {
-    "BaseApiUrl": "https://www.zebpay.co/api/v1",
-    "BaseAuthUrl": "https://login.zebpay.co/",
+            {
+              "ZebpaySettings": {
+                //LIVE URL's -- Login to https://build.zebpay.com/ to get your own credentials
+                //"BaseApiUrl": "https://www.zebapi.com/api/v1",
+                //"BaseAuthUrl": "https://connect.zebpay.com/",
 
-    "ClientId": "cbb35552-1d7a-4b0f-a45c-8fcee6342f93", //TODO: Change the value to your actual ClientId
-    "ClientSecret": "8876cc4a-12aa-4c17-888f-fc99b8e53d62", //TODO: Change the value to your actual ClientSecret
-    "SignatureSecret": "5afdf23c-0118-40d0-a2b8-86985b149c28", //TODO: Change the value to your actual SignatureSecret
-    "ZebpaySubscriptionKey": "e6c8a7092f6b4a8e9dc3c7544827715f", //TODO: Change the value to your actual zebpay subscription key
-    "AllowedScopes": "openid profile wallet:transactions:read trade:read trade:create",
+                //Sandbox URL's -- Login to https://build.zebpay.co/ to get your own credentials
+                "BaseApiUrl": "https://www.zebpay.co/api/v1",
+                "BaseAuthUrl": "https://login.zebpay.co/",
 
-    //Configure AccessToken & RefreshToken only you have already retrieved from Zebpay Auth Server
-    "AccessToken": "", //TODO: Generate user token and paste here
-    "RefreshToken": "" //TODO: Generate refresh token and paste here
-  }
-}    
+                //Credentials
+                "ClientId": "xxxx-xxxx-xxx", //TODO: Change the value to your actual ClientId
+                "ClientSecret": "xxxx-xxxx-xxx", //TODO: Change the value to your actual ClientSecret
+                "ApiSecret": "xxxx-xxxx-xxx", //TODO: Change the value to your actual ApiSecret
+                "ZebpaySubscriptionKey": "xxxx-xxxx-xxx", //TODO: Change the value to your actual zebpay subscription key
+                "AllowedScopes": "xxxx-xxxx-xxx",
+
+                //Configure AccessToken & RefreshToken only you have already have it saved, the one retrieved from Zebpay Auth Server
+                "AccessToken": "", //Generate user token and paste here
+                "RefreshToken": "", //Generate refresh token and paste here,
+
+                //These settings will be used once in a lifetime for a "ClientId-User" combination, and will be ignored in all subsequent times
+                "DailyTradeLimit": "500000",
+                "TotalTradeLimit": "5000000"
+              }
+            }    
 ````
 
 
@@ -41,37 +50,38 @@ Zebpay rest client and Zebpay Model will also be available as nuget (As of now i
 <h2>3. Login to receive an access token, use below methods in a sequential way</h2>
 
 ````
-            var loginRequest = new Login { country_code = countryCode, mobile_number = mobileNumber, client_id = clientId, client_secret = clientSecret };
-            var loginResponse = zebpayRestClient.Login(loginRequest).Result;
+            var loginResponse = zebpayRestClient.Login(countryCode, mobileNumber).Result;
+            var otpResponse = zebpayRestClient.VerifyOTP(otp, loginResponse.Data.verification_code).Result;
+            var authResponse = zebpayRestClient.VerifyPin(pin, otpResponse.Data.verification_code).Result;
 
-            var verifyOtpRequest = new OtpVerification { otp = otp, verification_code = loginResponse.Data.verification_code, client_id = clientId, client_secret = clientSecret };
-            var otpResponse = zebpayRestClient.VerifyOTP(verifyOtpRequest).Result;
-
-            var verifyPinRequest = new PinVerification { pin = pin, scope = zebpayApiScopes, grant_type = "user_credentials", verification_code = otpResponse.Data.verification_code, client_id = clientId, client_secret = clientSecret };
-            var authResponse = zebpayRestClient.VerifyPin(verifyPinRequest).Result;
-
-            userToken = authResponse.Data.access_token;
-            refreshToken = authResponse.Data.refresh_token; //you will get this only if you are allowed for offline access   
+            var accessToken = authResponse.Data.access_token;
+            var refreshToken = authResponse.Data.refresh_token; //you will get this only if you are allowed for offline access   
 ````
 
 <h2>4. Reinitialize our restclient with  usertoken now</h2>
 
 ````
-            zebpayRestClient = new Zebpay.RestClient.ZebClient(Configuration, userToken, null);     
+            zebpayRestClient = new Zebpay.RestClient.ZebClient(Configuration, accessToken, null);     
 ````
 
 <h2>5. Call any API just by using our helper methods</h2>
 
 ````
-            var walletBalanceRequest = new WalletBalance { currency = currency };
-            var walletBalanceResponse = zebpayRestClient.WalletBalance(walletBalanceRequest).Result;
+            //Get Balance of any pair
+            var tradeBalanceResponse = zebpayRestClient.Balance(tradePair).Result;
             
-            var bidRequest = new Bid { trade_pair = tradepair, size = size, price = price };
-            var bidResponse = zebpayRestClient.Bid(bidRequest).Result;
+            //Get list of orders
+            //All parameters below are optional
+            var getAllOrdersresponse = zebpayRestClient.Orders(tradePair, orderId, status, page, limit).Result;
             
-            var orderCancelRequest = new CancelOrder { order_id = orderId, trade_pair = tradepair };
-            var orderCancelResponse = zebpayRestClient.Cancel(orderCancelRequest).Result;
+            //Create New Order
+            //side can be ask/bid
+            var createNewOrderRequest = new OrderRequest { trade_pair = tradepair, size = size, price = price, side = "ask" };
+            var response = zebpayRestClient.Create(createNewOrderRequest).Result;
+
+            //Get order details by Id (Fills)
+            var orderFillsResponse = zebpayRestClient.Fills(orderId).Result;
             
-            var askRequest = new Ask { trade_pair = tradepair, size = size, price = price };
-            var askResponse = zebpayRestClient.Ask(askRequest).Result;
+            //Cancel a pending order
+            var orderCancelResponse = zebpayRestClient.Cancel(orderId).Result;
 ````
