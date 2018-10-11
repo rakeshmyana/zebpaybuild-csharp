@@ -7,7 +7,7 @@ Zebpay rest client and Zebpay Model will also be available as nuget.
 
 <h1>How to Use</h1>
 
-- <i>Generate your key at https://build.zebpay.co/application (Web or Console/backed) to generate clientid, clientsecret, scope, and apiSecret and zebpaysubscriptionkey.</i>
+- <i>Generate your key at https://build.zebpay.com , under My APplications Page (Web or Console/backed) to generate clientid, clientsecret, scope, and apiSecret and zebpaysubscriptionkey.</i>
 
 <h2>1. Configure all values as app setting</h2>
 
