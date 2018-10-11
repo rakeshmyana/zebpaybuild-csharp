@@ -10,12 +10,7 @@
 
   <ItemGroup>
     <None Remove="nuget.exe" />
-    <None Remove="Response\Balance" />
     <None Remove="Zebpay.Model.nuspec" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="Response\Balance" />
   </ItemGroup>
 
 </Project>
