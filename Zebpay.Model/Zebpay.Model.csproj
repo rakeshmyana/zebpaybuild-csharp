@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp2.0\Zebpay.Model.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="nuget.exe" />
+    <None Remove="Response\Balance" />
+    <None Remove="Zebpay.Model.nuspec" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Response\Balance" />
+  </ItemGroup>
+
+</Project>
